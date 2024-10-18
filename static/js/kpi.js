@@ -101,18 +101,35 @@ export function draw_comm_chart(totalProjectWeight) {
 
 export function set_page_info_kpi() {
   // Get all projects
+  // FIXME: 根據 SITE_HOSTERS 來取得所有專案
   var list_project_uuids = [];
-  for (var index = 0; index < SITE_HOSTERS.length; index++) {
+
+  var list_site_hosters = [];
+  // FIXME: Check url parameter has status=loggedin
+  if (getLocalStorage("jwt") === "" && params.has('status') && params.get('status') === 'loggedin')
+  {
+    let email = getLocalStorage("email");
+    if(email !== ""){
+      list_site_hosters.append(email)
+    } else {
+      list_site_hosters = SITE_HOSTERS;
+    }
+  } else {
+    list_site_hosters = SITE_HOSTERS;
+  }
+
+  for (var index = 0; index < list_site_hosters.length; index++) {
     try {
-      var obj_list_projects = list_plans(SITE_HOSTERS[index], null);
+      var obj_list_projects = list_plans(list_site_hosters[index], null);
       list_project_uuids = list_project_uuids.concat(obj_list_projects.projects);
     } catch(e) { console.log(e) }
   }
 
   // Page info
-  set_page_info_project_list();
+  set_page_info_project_list(obj_list_projects);
 
   // Get total project weight
+  // FIXME: 根據所有的專案來計算權重 (hard code 不用管)
   var totalProjectWeight = get_total_project_weight(list_project_uuids);
 
   // Set relate people and project counts

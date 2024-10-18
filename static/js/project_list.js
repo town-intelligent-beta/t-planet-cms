@@ -13,63 +13,65 @@ if (allWeights.length === 0) {
   }
 }
 
-export function set_page_info_project_list() {
-  const yearFilterSelect = document.getElementById("year_filter");
-  var list_project_uuids = [];
-  var list_years = [];
+  // FIXME: 預設 obj_list_projects 為空
+  export function set_page_info_project_list(obj_list_projects = []) {
+    const yearFilterSelect = document.getElementById("year_filter");
+    var list_project_uuids = [];
+    var list_years = [];
 
-  const selectAllOption = document.createElement("option");
-  selectAllOption.value = "all";
-  selectAllOption.textContent = "全部";
-  yearFilterSelect.appendChild(selectAllOption);
+    const selectAllOption = document.createElement("option");
+    selectAllOption.value = "all";
+    selectAllOption.textContent = "全部";
+    yearFilterSelect.appendChild(selectAllOption);
 
-  for (var index = 0; index < SITE_HOSTERS.length; index++) {
-    try {
-      var obj_list_projects = list_plans(SITE_HOSTERS[index], null);
-      list_project_uuids = list_project_uuids.concat(
-        obj_list_projects.projects
-      );
+    // 若 obj_list_projects 為空，透過 SITE_HOSTERS 來建立資料
+    if (obj_list_projects.length === 0) {
+      for (var index = 0; index < SITE_HOSTERS.length; index++) {
+        try {
+          var obj_list = list_plans(SITE_HOSTERS[index], null);
+          obj_list_projects.push(obj_list);
+        } catch (e) {
+          console.log(e);
+        }
+      }
+    }
 
-      obj_list_projects.projects.forEach((project_uuid) => {
+    // 處理 obj_list_projects
+    obj_list_projects.forEach((obj) => {
+      list_project_uuids = list_project_uuids.concat(obj.projects);
+
+      obj.projects.forEach((project_uuid) => {
         var project_info = plan_info(project_uuid);
         if (project_info && project_info.period) {
-          var startYear = new Date(
-            project_info.period.split("-")[0]
-          ).getFullYear();
+          var startYear = new Date(project_info.period.split("-")[0]).getFullYear();
           list_years.push(startYear);
         }
       });
-    } catch (e) {
-      console.log(e);
-    }
+    });
+
+    list_years = Array.from(new Set(list_years)).sort();
+
+    list_years.forEach((year) => {
+      if (!isNaN(year) && year !== undefined) {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = year;
+        yearFilterSelect.appendChild(option);
+      }
+    });
+
+    yearFilterSelect.addEventListener("change", function () {
+      const selectedValue = this.value;
+
+      if (selectedValue === "all") {
+        displayAllProjects(list_project_uuids);
+      } else {
+        const selectedYear = parseInt(selectedValue);
+        const filteredProjectUUIDs = filterProjectsByYear(selectedYear, list_project_uuids);
+        displayFilteredProjects(filteredProjectUUIDs);
+      }
+    });
   }
-
-  list_years = Array.from(new Set(list_years)).sort();
-
-  list_years.forEach((year) => {
-    if (!isNaN(year) && year !== undefined) {
-      const option = document.createElement("option");
-      option.value = year;
-      option.textContent = year;
-      yearFilterSelect.appendChild(option);
-    }
-  });
-
-  yearFilterSelect.addEventListener("change", function () {
-    const selectedValue = this.value;
-
-    if (selectedValue === "all") {
-      displayAllProjects(list_project_uuids);
-    } else {
-      const selectedYear = parseInt(selectedValue);
-      const filteredProjectUUIDs = filterProjectsByYear(
-        selectedYear,
-        list_project_uuids
-      );
-      displayFilteredProjects(filteredProjectUUIDs);
-    }
-  });
-
   function displayFilteredProjects(filteredProjectUUIDs) {
     const projectContainer = document.getElementById("project_container");
     projectContainer.innerHTML = "";
@@ -96,7 +98,6 @@ export function set_page_info_project_list() {
       project_block.innerHTML = str_project_block_in_project_page_innetHTML;
       projectContainer.appendChild(project_block);
     });
-  }
 
   list_project_uuids.forEach((project_uuid) => {
     var obj_project = plan_info(project_uuid);

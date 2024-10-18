@@ -1,7 +1,14 @@
 import { set_page_info } from './set_page_info.js';
 
 function add_navbar() {
-  $('#navbar').html(str_navbar)
+  // Get navbar from local storage or set default
+  if (getLocalStorage("jwt") === "") {
+    console.log("not signined")
+    $('#navbar').html(str_navbar)
+  } else {
+    console.log("signined")
+    $('#navbar').html(str_navbar_loggedin)
+  }
 
   // Visible
   if (SITE_TYPE == 0) {

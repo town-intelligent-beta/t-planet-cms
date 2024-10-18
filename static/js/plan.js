@@ -97,6 +97,9 @@ export function list_plan_tasks(uuid, parent = 0) {
 }
 
 export function list_plans(email = null, sdg = null) {
+  // FIXME: debug message
+  console.log("Hello email =" + email);
+
   // Check required field and save to JSON struct
   var dataJSON = {};
 
